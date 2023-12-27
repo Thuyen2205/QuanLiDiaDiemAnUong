@@ -1,0 +1,12 @@
+{% extends 'admin/base_site.html'  %}
+
+{% block content %}
+<h1>Thống kê tài khoản</h1>
+
+{% for c in stats  %}
+<li><strong>{{c.loai_tai_khoan_id.ten_loai_tai_khoan}}</strong></li>
+
+
+{% endfor %}
+
+{% endblock %}
