@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'mealmaster.apps.MealmasterConfig',
     'rest_framework',
     'oauth2_provider',
-    'corsheaders'
+    'corsheaders',
 
 ]
 

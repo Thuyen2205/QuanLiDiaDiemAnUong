@@ -2,11 +2,17 @@ from django.shortcuts import render
 from oauth2_provider.contrib.rest_framework import authentication
 from rest_framework import viewsets, permissions, status, generics
 from rest_framework.response import Response
+from django.http import JsonResponse
+from rest_framework.permissions import IsAuthenticated
 
-from .models import TaiKhoan, MonAn, Menu, LoaiTaiKhoan, BinhLuan, LoaiThucAn
+from .models import TaiKhoan, MonAn, Menu, LoaiTaiKhoan, BinhLuan, LoaiThucAn, ChiTietMenu, HoaDon, ChiTietHoaDon, \
+    Follow, DanhGia, ThongTinGiaoHang
 from .serializers import (TaiKhoanSerializer, MonAnSerializer,
                           MenuSerializer, LoaiTaiKhoanSerializer, ThemMonAnSerializer,
-                          BinhLuanSerializer, TraLoiBinhLuanSerializer, LoaiThucAnSerializer, LoginSerializer)
+                          BinhLuanSerializer, TraLoiBinhLuanSerializer, LoaiThucAnSerializer,
+                          ChiTietMenuSerializer, HoaDonSerializer, ChiTietHoaDonSerializer,
+                          FollowSerializer, DanhGiaSerializer, ThongTinGiaoHangSerializer,
+                          ThongTinTaiKhoanSerializer)
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser
 from rest_framework.views import APIView
@@ -14,7 +20,35 @@ from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
 
 
+class ThongTinTaiKhoanView(viewsets.ModelViewSet):
+    queryset = TaiKhoan.objects.all()
+    serializer_class =ThongTinTaiKhoanSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # Chỉ trả về thông tin của tài khoản đăng nhập hiện tại
+        return TaiKhoan.objects.filter(id=self.request.user.id)
+
+
+class ThongTinGiaoHangView(viewsets.ModelViewSet):
+    queryset = ThongTinGiaoHang.objects.all()
+    serializer_class = ThongTinGiaoHangSerializer
+
+
 # Create your views here.
+class DanhGiaViewSet(viewsets.ModelViewSet):
+    queryset = DanhGia.objects.all()
+    serializer_class = DanhGiaSerializer
+
+
+class FollowViewSet(viewsets.ModelViewSet):
+    queryset = Follow.objects.all()
+    serializer_class = FollowSerializer
+
+
+class ChiTietMenuViewSet(viewsets.ModelViewSet):
+    queryset = ChiTietMenu.objects.all()
+    serializer_class = ChiTietMenuSerializer
 
 
 class LoaiThucAnViewSet(viewsets.ModelViewSet):
@@ -50,7 +84,7 @@ class TaiKhoanViewSet(viewsets.ViewSet,
                       generics.RetrieveAPIView):
     queryset = TaiKhoan.objects.all()
     serializer_class = TaiKhoanSerializer
-    parser_classes = [MultiPartParser, ]
+    # parser_classes = [MultiPartParser, ]
 
 
 class LoaiTaiKhoanViewSet(viewsets.ModelViewSet):
@@ -73,18 +107,11 @@ class TraLoiBinhLuanViewSet(viewsets.ModelViewSet):
     serializer_class = TraLoiBinhLuanSerializer
 
 
-class LoginViewSet(APIView):
-    def post(self, request):
-        serializer = LoginSerializer(data=request.data)
-        if serializer.is_valid():
-            username = serializer.validated_data['username']
-            password = serializer.validated_data['password']
-            user = authenticate(username=username, password=password)
+class HoaDonViewSet(viewsets.ModelViewSet):
+    queryset = HoaDon.objects.all()
+    serializer_class = HoaDonSerializer
 
-            if user:
-                token, created = Token.objects.get_or_create(user=user)
-                return Response({'token': token.key}, status=status.HTTP_200_OK)
-            else:
-                return Response({'error': 'Tên đăng nhập hoặc mật khẩu không chính xác'},
-                                status=status.HTTP_401_UNAUTHORIZED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ChiTietHoaDonViewset(viewsets.ModelViewSet):
+    queryset = ChiTietHoaDon.objects.all()
+    serializer_class = ChiTietHoaDonSerializer

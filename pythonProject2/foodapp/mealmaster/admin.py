@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.template.response import TemplateResponse
 
 from .models import (TaiKhoan,LoaiTaiKhoan,KiemDuyet,LoaiThucAn,LoaiDiaChi,
-                     MonAn,HoaDon,Menu,ChiTietMenu,ChiTietHoaDon)
+                     MonAn,HoaDon,Menu,ChiTietMenu,ChiTietHoaDon,ThoiDiem)
 # Register your models here.
 from django.urls import path
 from . import dao
@@ -44,3 +44,5 @@ admin_site.register(LoaiThucAn)
 admin_site.register(MonAn)
 admin_site.register(Menu)
 admin_site.register(ChiTietMenu)
+admin_site.register(ThoiDiem)
+admin_site.register(LoaiDiaChi)
