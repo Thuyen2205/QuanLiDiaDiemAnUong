@@ -25,6 +25,8 @@ SECRET_KEY = 'django-insecure-k+h=47@l7exi9_(lhm-0!7f9uu_ddc9ssy+-#)v*0ts!hq%wl^
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
+# settings.py
+APPEND_SLASH = False
 
 # Application definition
 
@@ -39,9 +41,18 @@ INSTALLED_APPS = [
     'rest_framework',
     'oauth2_provider',
     'corsheaders',
+    'cloudinary',
+    'drf_yasg',
 
 ]
 
+import cloudinary
+
+cloudinary.config(
+    cloud_name="dpp5kyfae",
+    api_key="515925565185764",
+    api_secret="htAoHniRW5N34DQkcBo2Jh_5-XM"
+)
 REST_FRAMEWORK = {
     # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     # 'PAGE_SIZE': 4,
@@ -128,7 +139,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Ho_Chi_Minh'
 
 USE_I18N = True
 

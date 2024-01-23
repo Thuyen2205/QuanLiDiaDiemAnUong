@@ -1,15 +1,30 @@
+from dataclasses import fields
+
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 
 from .models import (TaiKhoan, MonAn, Menu, LoaiTaiKhoan, KiemDuyet, LoaiThucAn, BinhLuan,
-                     Follow, ChiTietMenu, HoaDon, ChiTietHoaDon, DanhGia, ThongTinGiaoHang, LoaiDiaChi)
+                     Follow, ChiTietMenu, HoaDon, ChiTietHoaDon, DanhGia, ThongTinGiaoHang, LoaiDiaChi,
+                     ThoiDiem, ThoiGianBan)
 from django.contrib.auth.hashers import make_password
 
 
 class ThongTinTaiKhoanSerializer(ModelSerializer):
     class Meta:
         model = TaiKhoan
-        fields = ["id", "username","sdt","loai_tai_khoan","ten_nguoi_dung"]
+        fields = ["id", "username", "sdt", "loai_tai_khoan", "ten_nguoi_dung", "avatar"]
+
+
+class ThoiDiemSerializer(ModelSerializer):
+    class Meta:
+        model = ThoiDiem
+        fields = ["id", "ten_buoi", "thoi_gian_bat_dau", "thoi_gian_ket_thuc"]
+
+
+class ThoiGianBanSerializer(ModelSerializer):
+    class Meta:
+        model = ThoiGianBan
+        fields = ["id", "mon_an", "menu", "thoi_diem"]
 
 
 class ThongTinGiaoHangSerializer(ModelSerializer):
@@ -37,8 +52,15 @@ class TaiKhoanSerializer(ModelSerializer):
                   'ngay_sinh',
                   'ngay_sinh',
                   'kiem_duyet_id',
-                  'loai_tai_khoan']
-        # read_only_fields = ['gio_hang_id']
+                  'loai_tai_khoan','kinh_do','vi_do']
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+
+        if representation.get('avatar'):
+            representation['avatar'] = "https://res.cloudinary.com/dpp5kyfae/" + representation['avatar']
+
+        return representation
 
     def create(self, validated_data):
         kiem_duyet_default = KiemDuyet.objects.get(pk=1)
@@ -63,7 +85,20 @@ class CuaHangSerializer(ModelSerializer):
 class MonAnSerializer(ModelSerializer):
     class Meta:
         model = MonAn
-        fields = ["id", "ten_mon_an", "gia_mon_an", "hinh_anh", "mo_ta", "nguoi_dung"]
+        fields = ["id", "ten_mon_an", "gia_mon_an", "mo_ta", "nguoi_dung", "loai_thuc_an", "so_luong", "hinh_anh"]
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+
+        if representation.get('hinh_anh'):
+            representation['hinh_anh'] = "https://res.cloudinary.com/dpp5kyfae/" + representation['hinh_anh']
+
+        return representation
+
+    def update(self, instance, validated_data):
+        instance.so_luong = validated_data.get("so_luong", instance.so_luong)
+        instance.save()
+        return instance
 
 
 class LoaiThucAnSerializer(ModelSerializer):
@@ -75,7 +110,15 @@ class LoaiThucAnSerializer(ModelSerializer):
 class MenuSerializer(ModelSerializer):
     class Meta:
         model = Menu
-        fields = ["id", "tieu_de", "trang_thai", "nguoi_dung"]
+        fields = ["id", "tieu_de", "nguoi_dung", "ngay_tao","trang_thai","hinh_anh"]
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+
+        if representation.get('hinh_anh'):
+            representation['hinh_anh'] = "https://res.cloudinary.com/dpp5kyfae/" + representation['hinh_anh']
+
+        return representation
 
 
 class LoaiTaiKhoanSerializer(ModelSerializer):
@@ -175,8 +218,20 @@ class ChiTietHoaDonSerializer(serializers.ModelSerializer):
 class FollowSerializer(serializers.ModelSerializer):
     class Meta:
         model = Follow
-        fields = ["id", "cua_hang", "nguoi_dung"]
+        fields = ["id", "cua_hang","nguoi_dung_id"]
 
+    def create(self, validated_data):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            try:
+                tai_khoan = TaiKhoan.objects.get(username=request.user.username)
+                validated_data['nguoi_dung_id'] = tai_khoan.id
+                mon_an = Follow.objects.create(**validated_data)
+                return mon_an
+            except TaiKhoan.DoesNotExist:
+                raise serializers.ValidationError("Không thể tạo món ăn")
+
+        raise serializers.ValidationError("Vui lòng đăng nhập để thêm món ăn")
 
 class DanhGiaSerializer(serializers.ModelSerializer):
     class Meta:

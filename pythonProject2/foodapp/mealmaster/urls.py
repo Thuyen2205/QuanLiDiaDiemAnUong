@@ -21,13 +21,10 @@ router.register('follow',views.FollowViewSet)
 router.register('danhgia',views.DanhGiaViewSet)
 router.register('thongtingiaohang',views.ThongTinGiaoHangView)
 router.register('taikhoandangnhap',views.ThongTinTaiKhoanView, basename="taikhoangdangnhap")
-
-
-
-
-
-
-
+router.register('thoidiem',views.ThoiDiemView)
+router.register('thoigianban',views.ThoiGianBanView)
+router.register('monanhientai',views.MonAnHienTaiViewSet)
+router.register('menuhientai',views.MenuHienTaiViewSet,basename="menuhientai")
 
 
 
