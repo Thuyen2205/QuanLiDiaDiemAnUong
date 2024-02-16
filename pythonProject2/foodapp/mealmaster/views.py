@@ -21,6 +21,8 @@ from rest_framework.views import APIView
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
 from django.utils import timezone
+from geopy.geocoders import Nominatim
+from geopy.distance import geodesic
 
 
 class MonAnHienTaiViewSet(viewsets.ModelViewSet):
@@ -33,7 +35,8 @@ class MonAnHienTaiViewSet(viewsets.ModelViewSet):
         current_hour = current_time.hour
 
         print("Giờ hiện tại là:", current_hour)
-        current_thoi_gian_bans = ThoiGianBan.objects.filter(thoi_diem__thoi_gian_bat_dau__lte=current_time, thoi_diem__thoi_gian_ket_thuc__gte=current_time)
+        current_thoi_gian_bans = ThoiGianBan.objects.filter(thoi_diem__thoi_gian_bat_dau__lte=current_time,
+                                                            thoi_diem__thoi_gian_ket_thuc__gte=current_time)
 
         mon_an_ids = current_thoi_gian_bans.values_list('mon_an', flat=True)
         queryset = MonAn.objects.filter(id__in=mon_an_ids)
@@ -47,10 +50,57 @@ class MonAnHienTaiViewSet(viewsets.ModelViewSet):
 class ThongTinTaiKhoanView(viewsets.ModelViewSet):
     queryset = TaiKhoan.objects.all()
     serializer_class = ThongTinTaiKhoanSerializer
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         return TaiKhoan.objects.filter(id=self.request.user.id)
+
+    @action(methods=['get'], detail=False, url_path='get-cua-hang', url_name='get-cua-hang')
+    def get_cua_hang(self, request):
+        try:
+            # Lấy thông tin của tài khoản đang đăng nhập
+            tai_khoan_dang_nhap = TaiKhoan.objects.get(id=self.request.user.id)
+
+            # Lấy danh sách tất cả các tài khoản (không bao gồm tài khoản đang đăng nhập)
+            tai_khoan_khac = TaiKhoan.objects.exclude(id=tai_khoan_dang_nhap.id)
+
+            # Chuyển đổi địa chỉ thành tọa độ và tính toán khoảng cách
+            geolocator = Nominatim(user_agent="my_geocoder")
+            tai_khoan_khac = [
+                {
+                    **tk,
+                    'location': geolocator.geocode(tk['dia_chi']),
+                    'distance': geodesic(
+                        (tai_khoan_dang_nhap.vi_do, tai_khoan_dang_nhap.kinh_do),
+                        (tk['location'].latitude, tk['location'].longitude)
+                    ).meters
+                }
+                for tk in tai_khoan_khac.values()
+            ]
+
+            # Lọc danh sách tài khoản gần nhất (ví dụ: lấy 5 tài khoản đầu tiên)
+            tai_khoan_nearby = sorted(tai_khoan_khac, key=lambda x: x['distance'])[:5]
+
+            # Chuyển danh sách tài khoản thành dạng JSON
+            tai_khoan_nearby_data = [
+                {
+                    'id': tk['id'],
+                    'ten_nguoi_dung': tk['ten_nguoi_dung'],
+                    'sdt': tk['sdt'],
+                    'dia_chi': tk['dia_chi'],
+                    'kinh_do': tk['kinh_do'],
+                    'vi_do': tk['vi_do'],
+                    'distance': tk['distance'],
+                }
+                for tk in tai_khoan_nearby
+            ]
+
+            return Response(tai_khoan_nearby_data, status=status.HTTP_200_OK)
+
+        except TaiKhoan.DoesNotExist:
+            return Response({'error': 'TaiKhoan not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class ThoiDiemView(viewsets.ModelViewSet):
@@ -95,10 +145,8 @@ class MonAnViewSet(viewsets.ModelViewSet):
     serializer_class = MonAnSerializer
 
 
-
-
 class MenuHienTaiViewSet(viewsets.ModelViewSet):
-    queryset=Menu.objects.all()
+    queryset = Menu.objects.all()
     serializer_class = MenuSerializer
 
     def list(self, request, *args, **kwargs):
@@ -119,11 +167,9 @@ class MenuHienTaiViewSet(viewsets.ModelViewSet):
         return Response(serialized_data)
 
 
-
 class MenuViewSet(viewsets.ModelViewSet):
     queryset = Menu.objects.all()
     serializer_class = MenuSerializer
-
 
     @action(methods=['post'], detail=True, url_path='active-menu', url_name='active-menu')
     def hide_menu(self, request, pk):
@@ -135,7 +181,6 @@ class MenuViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         return Response(data=MenuSerializer(mn, context={'request': request}).data, status=status.HTTP_200_OK)
-
 
     @action(methods=['get'], detail=True, url_path='list-monan', url_name='list-monan')
     def list_monan(self, request, pk):
@@ -151,6 +196,7 @@ class MenuViewSet(viewsets.ModelViewSet):
         serializer = MonAnSerializer(monan_list, many=True, context={'request': request})
 
         return Response(data=serializer.data, status=status.HTTP_200_OK)
+
 
 class TaiKhoanViewSet(viewsets.ViewSet,
                       generics.ListAPIView,
@@ -178,6 +224,15 @@ class TaiKhoanViewSet(viewsets.ViewSet,
             tai_khoan = TaiKhoan.objects.get(pk=tai_khoan_id)
             menus = Menu.objects.filter(nguoi_dung=tai_khoan)
             serializer = MenuSerializer(menus, many=True)
+            return Response(serializer.data)
+        except TaiKhoan.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+    @action(methods=['get'], detail=False, url_path='loai-tai-khoan-2', url_name='loai-tai-khoan-2')
+    def list_TaiKhoan_with_loai_tai_khoan_2(self, request, *args, **kwargs):
+        try:
+            tai_khoans = TaiKhoan.objects.filter(loai_tai_khoan=2)
+            serializer = TaiKhoanSerializer(tai_khoans, many=True)
             return Response(serializer.data)
         except TaiKhoan.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)

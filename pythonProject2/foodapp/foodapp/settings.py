@@ -45,6 +45,8 @@ INSTALLED_APPS = [
     'drf_yasg',
 
 ]
+# settings.py
+GOOGLE_MAPS_API_KEY = 'AIzaSyB-M500zF9hEI3OoOPyK_dVHfWDyZcx5fI'
 
 import cloudinary
 

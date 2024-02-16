@@ -12,7 +12,7 @@ from django.contrib.auth.hashers import make_password
 class ThongTinTaiKhoanSerializer(ModelSerializer):
     class Meta:
         model = TaiKhoan
-        fields = ["id", "username", "sdt", "loai_tai_khoan", "ten_nguoi_dung", "avatar"]
+        fields = ["id", "username", "sdt", "loai_tai_khoan", "ten_nguoi_dung", "avatar", "kinh_do", "vi_do"]
 
 
 class ThoiDiemSerializer(ModelSerializer):
@@ -52,7 +52,7 @@ class TaiKhoanSerializer(ModelSerializer):
                   'ngay_sinh',
                   'ngay_sinh',
                   'kiem_duyet_id',
-                  'loai_tai_khoan','kinh_do','vi_do']
+                  'loai_tai_khoan', 'kinh_do', 'vi_do', 'dia_chi']
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -104,13 +104,21 @@ class MonAnSerializer(ModelSerializer):
 class LoaiThucAnSerializer(ModelSerializer):
     class Meta:
         model = LoaiThucAn
-        fields = ["id", "ten_loai_thuc_an"]
+        fields = ["id", "ten_loai_thuc_an", "hinh_anh"]
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+
+        if representation.get('hinh_anh'):
+            representation['hinh_anh'] = "https://res.cloudinary.com/dpp5kyfae/" + representation['hinh_anh']
+
+        return representation
 
 
 class MenuSerializer(ModelSerializer):
     class Meta:
         model = Menu
-        fields = ["id", "tieu_de", "nguoi_dung", "ngay_tao","trang_thai","hinh_anh"]
+        fields = ["id", "tieu_de", "nguoi_dung", "ngay_tao", "trang_thai", "hinh_anh"]
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -218,7 +226,7 @@ class ChiTietHoaDonSerializer(serializers.ModelSerializer):
 class FollowSerializer(serializers.ModelSerializer):
     class Meta:
         model = Follow
-        fields = ["id", "cua_hang","nguoi_dung_id"]
+        fields = ["id", "cua_hang", "nguoi_dung_id"]
 
     def create(self, validated_data):
         request = self.context.get('request')
@@ -232,6 +240,7 @@ class FollowSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("Không thể tạo món ăn")
 
         raise serializers.ValidationError("Vui lòng đăng nhập để thêm món ăn")
+
 
 class DanhGiaSerializer(serializers.ModelSerializer):
     class Meta:

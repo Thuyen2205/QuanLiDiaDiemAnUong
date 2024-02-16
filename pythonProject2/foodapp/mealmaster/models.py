@@ -25,6 +25,8 @@ class TaiKhoan(AbstractUser):
     password = models.CharField(max_length=200, null=False, blank=False)
     ngay_sinh = models.DateField(null=True, blank=True)
     email = models.EmailField(null=True, blank=True)
+    dia_chi = models.CharField(max_length=50, null=True, blank=True)
+
     sdt = models.CharField(max_length=50, null=True, blank=True)
     avatar = CloudinaryField('avatar',null=True)
     kinh_do = models.FloatField(null=True, blank=True, default=0)
@@ -99,6 +101,7 @@ class ChiTietMenu(models.Model):
 
 class LoaiThucAn(models.Model):
     ten_loai_thuc_an = models.CharField(max_length=50, null=False, blank=False)
+    hinh_anh = CloudinaryField('hinh_anh',null=True)
 
     def __str__(self):
         return self.ten_loai_thuc_an
@@ -135,6 +138,7 @@ class HoaDon(models.Model):
 class ChiTietHoaDon(models.Model):
     hoa_don = models.ForeignKey(HoaDon, on_delete=models.CASCADE, null=False, blank=False)
     mon_an = models.ForeignKey('MonAn', on_delete=models.CASCADE, null=False, blank=False)
+    so_luong = models.IntegerField(null=True, blank=True, default=0)
 
     def __str__(self):
         return self.hoa_don
