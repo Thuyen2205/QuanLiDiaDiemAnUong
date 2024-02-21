@@ -2,6 +2,7 @@ from rest_framework.routers import DefaultRouter
 from . import views
 from django.urls import path, include
 from .admin import admin_site
+from .views import SearchMonAnViewSet
 
 router = DefaultRouter()
 router.register('taikhoans', views.TaiKhoanViewSet)
@@ -23,12 +24,13 @@ router.register('thoidiem', views.ThoiDiemView)
 router.register('thoigianban', views.ThoiGianBanView)
 router.register('monanhientai', views.MonAnHienTaiViewSet)
 router.register('menuhientai', views.MenuHienTaiViewSet, basename="menuhientai")
+router.register(r'searchmonan', SearchMonAnViewSet, basename='searchmonan')
 
-# /taikhoan/ - Get
 
 urlpatterns = [
-    path('', include(router.urls)),
-    path('admin/', admin_site.urls),
+                  path('', include(router.urls)),
+                  path('admin/', admin_site.urls),
+                  path('api/search-mon-an/<str:ten_mon_an>/', SearchMonAnViewSet.as_view({'get': 'list'}),
+                       name='search_mon_an'),
 
-
-]
+              ]

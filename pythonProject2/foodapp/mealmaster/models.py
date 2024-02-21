@@ -26,7 +26,6 @@ class TaiKhoan(AbstractUser):
     ngay_sinh = models.DateField(null=True, blank=True)
     email = models.EmailField(null=True, blank=True)
     dia_chi = models.CharField(max_length=50, null=True, blank=True)
-
     sdt = models.CharField(max_length=50, null=True, blank=True)
     avatar = CloudinaryField('avatar',null=True)
     kinh_do = models.FloatField(null=True, blank=True, default=0)

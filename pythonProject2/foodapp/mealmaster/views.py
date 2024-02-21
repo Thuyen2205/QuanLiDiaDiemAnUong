@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from django.http import JsonResponse
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
+from django.db.models import Q
 
 from .models import TaiKhoan, MonAn, Menu, LoaiTaiKhoan, BinhLuan, LoaiThucAn, ChiTietMenu, HoaDon, ChiTietHoaDon, \
     Follow, DanhGia, ThongTinGiaoHang, ThoiDiem, ThoiGianBan
@@ -50,6 +51,7 @@ class MonAnHienTaiViewSet(viewsets.ModelViewSet):
 class ThongTinTaiKhoanView(viewsets.ModelViewSet):
     queryset = TaiKhoan.objects.all()
     serializer_class = ThongTinTaiKhoanSerializer
+
     # permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
@@ -145,6 +147,32 @@ class MonAnViewSet(viewsets.ModelViewSet):
     serializer_class = MonAnSerializer
 
 
+class SearchMonAnViewSet(viewsets.ModelViewSet):
+    serializer_class = MonAnSerializer
+
+    def get_queryset(self):
+        ten_mon_an = self.kwargs.get('ten_mon_an', None)
+
+        # Lấy thời điểm hiện tại
+        current_time = timezone.localtime(timezone.now())
+
+        # Lấy danh sách các món ăn có thời gian bán hiện tại
+        current_thoi_gian_bans = ThoiGianBan.objects.filter(
+            thoi_diem__thoi_gian_bat_dau__lte=current_time,
+            thoi_diem__thoi_gian_ket_thuc__gte=current_time
+        )
+
+        mon_an_ids = current_thoi_gian_bans.values_list('mon_an', flat=True)
+
+        # Lọc danh sách món ăn theo tên và thời gian bán hiện tại
+        queryset = MonAn.objects.filter(
+            Q(ten_mon_an__icontains=ten_mon_an) if ten_mon_an else Q(),
+            id__in=mon_an_ids
+        )
+
+        return queryset
+
+
 class MenuHienTaiViewSet(viewsets.ModelViewSet):
     queryset = Menu.objects.all()
     serializer_class = MenuSerializer
@@ -211,8 +239,21 @@ class TaiKhoanViewSet(viewsets.ViewSet,
 
         try:
             tai_khoan = TaiKhoan.objects.get(pk=tai_khoan_id)
-            monans = MonAn.objects.filter(nguoi_dung=tai_khoan)
-            serializer = MonAnSerializer(monans, many=True)
+
+            # Lấy thời điểm hiện tại
+            current_time = timezone.localtime(timezone.now())
+
+            # Lấy danh sách các món ăn có thời gian bán hiện tại cho tài khoản
+            current_thoi_gian_bans = ThoiGianBan.objects.filter(
+                thoi_diem__thoi_gian_bat_dau__lte=current_time,
+                thoi_diem__thoi_gian_ket_thuc__gte=current_time,
+                mon_an__nguoi_dung=tai_khoan
+            )
+
+            mon_an_ids = current_thoi_gian_bans.values_list('mon_an', flat=True)
+            queryset = MonAn.objects.filter(id__in=mon_an_ids)
+
+            serializer = MonAnSerializer(queryset, many=True)
             return Response(serializer.data)
         except TaiKhoan.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -232,6 +273,15 @@ class TaiKhoanViewSet(viewsets.ViewSet,
     def list_TaiKhoan_with_loai_tai_khoan_2(self, request, *args, **kwargs):
         try:
             tai_khoans = TaiKhoan.objects.filter(loai_tai_khoan=2)
+            serializer = TaiKhoanSerializer(tai_khoans, many=True)
+            return Response(serializer.data)
+        except TaiKhoan.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+    @action(methods=['get'], detail=False, url_path='loai-tai-khoan-1', url_name='loai-tai-khoan-1')
+    def list_TaiKhoan_with_loai_tai_khoan_1(self, request, *args, **kwargs):
+        try:
+            tai_khoans = TaiKhoan.objects.filter(loai_tai_khoan=1)
             serializer = TaiKhoanSerializer(tai_khoans, many=True)
             return Response(serializer.data)
         except TaiKhoan.DoesNotExist:
