@@ -3,6 +3,7 @@ from . import views
 from django.urls import path, include
 from .admin import admin_site
 from .views import SearchMonAnViewSet
+# from .views import create_payment
 
 router = DefaultRouter()
 router.register('taikhoans', views.TaiKhoanViewSet)
@@ -26,11 +27,18 @@ router.register('monanhientai', views.MonAnHienTaiViewSet)
 router.register('menuhientai', views.MenuHienTaiViewSet, basename="menuhientai")
 router.register(r'searchmonan', SearchMonAnViewSet, basename='searchmonan')
 
-
 urlpatterns = [
-                  path('', include(router.urls)),
-                  path('admin/', admin_site.urls),
-                  path('api/search-mon-an/<str:ten_mon_an>/', SearchMonAnViewSet.as_view({'get': 'list'}),
-                       name='search_mon_an'),
+    path('', include(router.urls)),
+    path('admin/', admin_site.urls),
+    path('api/search-mon-an/<str:ten_mon_an>/', SearchMonAnViewSet.as_view({'get': 'list'}),
+         name='search_mon_an'),
+    # path('payment-request/', create_payment, name='create-payment'),
+    path('pay', views.index, name='index'),
+    path('payment', views.payment, name='payment'),
+    path('payment_ipn', views.payment_ipn, name='payment_ipn'),
+    path('payment_return', views.payment_return, name='payment_return'),
+    path('query',views.query, name='query'),
+    path('refund', views.refund, name='refund'),
+    # path('admin/', admin.site.urls),
 
-              ]
+]

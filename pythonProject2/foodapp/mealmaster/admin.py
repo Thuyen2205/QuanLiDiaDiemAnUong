@@ -18,7 +18,7 @@ class TaiKhoanAdminSite(admin.AdminSite):
 
     def stats_view(self,request):
         return TemplateResponse(request,'admin/stats.html',{
-            'stats':dao.count_taikhoan()
+            'count':dao.count_taikhoan()
         })
 
 
@@ -28,14 +28,13 @@ admin_site=TaiKhoanAdminSite(name='Tai Khoan')
 
 
 class TaiKhoanAdmin(admin.ModelAdmin):
-
-
+    list_display = ["id","ten_nguoi_dung","username","ngay_sinh","loai_tai_khoan"]
+    search_fields = ["ten_nguoi_dung","loai_tai_khoan__ten_loai_tai_khoan"]
+    list_filter = ["ten_nguoi_dung","username","ngay_sinh"]
     class Media:
         css={
             'all': ('/static/css/style.css',)
         }
-
-
 
 admin_site.register(TaiKhoan,TaiKhoanAdmin)
 admin_site.register(LoaiTaiKhoan)

@@ -28,6 +28,17 @@ ALLOWED_HOSTS = ['*']
 # settings.py
 APPEND_SLASH = False
 
+
+# settings.py
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = '2051050488thuyen@ou.edu.vn'
+EMAIL_HOST_PASSWORD = '366258935'
+# DEFAULT_FROM_EMAIL = '2051050488thuyen@ou.edu.vn'
+
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -80,6 +91,12 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     "http://example.com",
 ]
+VNPAY_RETURN_URL = 'http://10.0.2.2:8000/payment_return'  # get from config
+VNPAY_PAYMENT_URL = 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'  # get from config
+VNPAY_API_URL = 'https://sandbox.vnpayment.vn/merchant_webapi/api/transaction'
+VNPAY_TMN_CODE = 'R1A37216'  # Website ID in VNPAY System, get from config
+VNPAY_HASH_SECRET_KEY = 'HOSKCEPHFSVTQVUGNRLGWCFBFUXPYIZK'  # Secret key for create checksum,get from config
+
 
 ROOT_URLCONF = 'foodapp.urls'
 CORS_ALLOW_ALL_ORIGINS = True

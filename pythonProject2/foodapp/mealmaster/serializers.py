@@ -12,7 +12,7 @@ from django.contrib.auth.hashers import make_password
 class ThongTinTaiKhoanSerializer(ModelSerializer):
     class Meta:
         model = TaiKhoan
-        fields = ["id", "username", "sdt", "loai_tai_khoan", "ten_nguoi_dung", "avatar", "kinh_do", "vi_do"]
+        fields = ["id", "username", "sdt", "loai_tai_khoan", "ten_nguoi_dung", "avatar", "kinh_do", "vi_do","email"]
 
 
 class ThoiDiemSerializer(ModelSerializer):
