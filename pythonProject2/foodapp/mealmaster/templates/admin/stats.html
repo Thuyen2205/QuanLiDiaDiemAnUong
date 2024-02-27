@@ -1,9 +1,34 @@
-{% extends 'admin/base_site.html'  %}
+<!-- templates/admin/stats.html -->
+{% extends "admin/base_site.html" %}
 
 {% block content %}
-<h1>Thống kê tài khoản</h1>
+<div class="module">
+    <h2>Thống kê tài khoản</h2>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+      google.charts.load('current', {'packages':['corechart']});
+      google.charts.setOnLoadCallback(drawChart);
 
-<p>Số lượng tài khoản khách hàng: {{ count_khachhang }}</p>
-<p>Số lượng tài khoản cuahang: {{ count_cuahang }}</p>
+      function drawChart() {
+        var data = google.visualization.arrayToDataTable([
+          ['Loại Tài Khoản', 'Số Lượng'],
+          ['Khách Hàng', {{ count_khachhang }}],
+          ['Cửa Hàng', {{ count_cuahang }}]
+        ]);
+
+        var options = {
+          title: 'Biểu đồ Loại Tài Khoản',
+          pieHole: 0.4,
+        };
+
+        var chart = new google.visualization.PieChart(document.getElementById('chart_div'));
+        chart.draw(data, options);
+      }
+
+    </script>
+
+    <!-- Thẻ Div để chứa biểu đồ -->
+    <div id="chart_div" style="width: 120%; height: 400px;"></div>
+</div>
 
 {% endblock %}

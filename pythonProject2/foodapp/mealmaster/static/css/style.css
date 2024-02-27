@@ -1,3 +1,6 @@
 *{
     background: antiquewhite;
 }
+.row-highlight {
+    background-color: #f2f2f2; /* Màu nền cho hàng được làm nổi bật */
+}

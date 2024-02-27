@@ -1,7 +1,7 @@
 from rest_framework.routers import DefaultRouter
 from . import views
 from django.urls import path, include
-from .admin import admin_site
+from .admin import admin_site,khachhang_site,cuahang_site
 from .views import SearchMonAnViewSet
 # from .views import create_payment
 
@@ -33,7 +33,10 @@ router.register('payment_vnpay', views.Payment_VNPayViewSet, basename="payment_v
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('admin/', admin_site.urls),
+    path('admin/', admin_site.urls, name='admin'),
+    path('khachhang-admin/', khachhang_site.urls, name='khachhang_admin'),
+    path('cuahang-admin/', cuahang_site.urls, name='cuahang_admin'),
+
     path('api/search-mon-an/<str:ten_mon_an>/', SearchMonAnViewSet.as_view({'get': 'list'}),
          name='search_mon_an'),
     # path('payment-request/', create_payment, name='create-payment'),

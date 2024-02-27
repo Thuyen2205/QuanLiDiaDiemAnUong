@@ -1,0 +1,43 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<style>
+    canvas {
+        max-width: 800px;
+        margin-top: 20px;
+    }
+</style>
+
+<div>
+    <h2>Biểu Đồ Tổng Doanh Thu Theo Năm</h2>
+
+    <form method="get" action="{% url 'admin:cuahang_stats_by_year' %}">
+        {% csrf_token %}
+        {{ year_form.as_p }}
+        <input type="submit" value="Thống kê">
+    </form>
+
+    <canvas id="revenueChart" width="800" height="400"></canvas>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        var ctx = document.getElementById('revenueChart').getContext('2d');
+        var revenueData = {
+            labels: [{% for user_with_amount_by_year in users_with_amount_by_year %}"{{ user_with_amount_by_year.nguoi_dung__ten_nguoi_dung }}",{% endfor %}],
+            datasets: [{
+                label: 'Tổng doanh thu',
+                data: [{% for user_with_amount_by_year in users_with_amount_by_year %}{{ user_with_amount_by_year.total_amount }},{% endfor %}],
+                   backgroundColor: '#1DB954',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        };
+
+        var revenueChart = new Chart(ctx, {
+            type: 'bar',
+            data: revenueData,
+        });
+    </script>
+</div>
+
+{% endblock %}

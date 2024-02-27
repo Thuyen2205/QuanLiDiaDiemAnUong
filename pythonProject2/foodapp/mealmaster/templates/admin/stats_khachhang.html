@@ -1,0 +1,42 @@
+<!-- templates/admin/stats.html -->
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+    <canvas id="myChart" width="400" height="200"></canvas>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var ctx = document.getElementById('myChart').getContext('2d');
+
+            var labels = [];
+            var data = [];
+
+            {% for tai_khoan in total_amount_by_customer %}
+                labels.push("{{ tai_khoan.ten_nguoi_dung }}");
+                data.push({{ tai_khoan.tong_tien_mua }});
+            {% endfor %}
+
+            var myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Total Amount by Customer',
+                        data: data,
+                        backgroundColor: '#1DB954',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+{% endblock %}

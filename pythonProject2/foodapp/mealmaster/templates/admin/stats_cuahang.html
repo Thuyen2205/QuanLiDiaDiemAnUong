@@ -1,0 +1,74 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<head>
+    <!-- Thêm thư viện Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<div>
+    <h2>Tổng doanh thu cửa hàng</h2>
+    <!-- Thẻ canvas để vẽ biểu đồ -->
+    <canvas id="revenueChart" width="800" height="200"></canvas>
+</div>
+<script>
+    var ctx = document.getElementById('revenueChart').getContext('2d');
+    var revenueData = {
+        labels: [{% for user_with_amount in users_with_amount %}"{{ user_with_amount.nguoi_dung__ten_nguoi_dung }}",{% endfor %}],
+        datasets: [{
+            label: 'Tổng doanh thu',
+            data: [{% for user_with_amount in users_with_amount %}{{ user_with_amount.total_amount }},{% endfor %}],
+            backgroundColor: '#1DB954',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1
+        }]
+    };
+
+    var revenueChart = new Chart(ctx, {
+        type: 'bar',
+        data: revenueData,
+    });
+</script>
+<style>
+        table {
+            width: 100%; /* Kích thước bảng chiếm toàn bộ độ rộng của div chứa nó */
+            border-collapse: collapse; /* Loại bỏ đường viền giữa các ô */
+            margin-top: 10px; /* Khoảng cách từ đỉnh bảng đến phần nội dung trên */
+        }
+
+        th, td {
+            border: 1px solid #ddd; /* Đường viền cho các ô */
+            padding: 8px; /* Khoảng cách từ nội dung đến đường viền */
+            text-align: left; /* Căn lề văn bản sang trái */
+        }
+
+        th {
+            background-color: #f2f2f2; /* Màu nền cho dòng tiêu đề */
+        }
+
+
+
+</style>
+<div>
+    <h2>Tổng doanh thu của hàng</h2>
+    <table>
+        <thead>
+        <tr>
+            <th>ID Cửa Hàng</th>
+            <th>Cửa Hàng</th>
+            <th>Tổng Doanh Thu</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for user_with_amount in users_with_amount %}
+        <tr>
+            <td>{{ user_with_amount.nguoi_dung__id }}</td>
+            <td>{{ user_with_amount.nguoi_dung__ten_nguoi_dung }}</td>
+            <td>{{ user_with_amount.total_amount }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+
+{% endblock %}
