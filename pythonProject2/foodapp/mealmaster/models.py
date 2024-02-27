@@ -194,6 +194,8 @@ class PaymentForm(forms.Form):
     order_desc = forms.CharField(max_length=100)
     bank_code = forms.CharField(max_length=20, required=False)
     language = forms.CharField(max_length=2)
+    userId=forms.IntegerField()
+    cartItemIds = forms.CharField(widget=forms.HiddenInput(), required=False)
 
 class Payment_VNPay(models.Model):
     order_id = models.BigIntegerField(default=0, null=True, blank=True)
@@ -201,5 +203,15 @@ class Payment_VNPay(models.Model):
     order_desc=models.CharField(max_length=200,null=True,blank=True)
     vnp_TransactionNo=models.CharField(max_length=200,null=True,blank=True)
     vnp_ResponseCode=models.CharField(max_length=200,null=True, blank=True)
+    khach_hang=models.ForeignKey(TaiKhoan, on_delete=models.CASCADE, null=True, blank=True)
+    # mon_an=models.ForeignKey(MonAn,on_delete=models.CASCADE,null=True,blank=True)
+    mon_an = models.ManyToManyField('MonAn', through='ChiTietHoaDonVNPay', related_name='hoadon_vnpay')
+    cartItemIds = models.CharField(max_length=200, null=True, blank=True)
+
+
+class ChiTietHoaDonVNPay(models.Model):
+    hoa_don = models.ForeignKey(Payment_VNPay, on_delete=models.CASCADE, null=False, blank=False)
+    mon_an = models.ForeignKey('MonAn', on_delete=models.CASCADE, null=False, blank=False)
+
 
 

@@ -18,7 +18,7 @@ class TaiKhoanAdminSite(admin.AdminSite):
 
     def stats_view(self,request):
         return TemplateResponse(request,'admin/stats.html',{
-            'count':dao.count_taikhoan()
+            'count_khachhang':dao.count_khachhang(),'count_cuahang':dao.count_cuahang()
         })
 
 

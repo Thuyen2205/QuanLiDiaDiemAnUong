@@ -5,14 +5,27 @@ from rest_framework import serializers
 
 from .models import (TaiKhoan, MonAn, Menu, LoaiTaiKhoan, KiemDuyet, LoaiThucAn, BinhLuan,
                      Follow, ChiTietMenu, HoaDon, ChiTietHoaDon, DanhGia, ThongTinGiaoHang, LoaiDiaChi,
-                     ThoiDiem, ThoiGianBan)
+                     ThoiDiem, ThoiGianBan, Payment_VNPay, ChiTietHoaDonVNPay)
 from django.contrib.auth.hashers import make_password
+
+
+# class PaymentVNPaySerializer(ModelSerializer):
+class Payment_VNPaySerializer(ModelSerializer):
+    class Meta:
+        model = Payment_VNPay
+        fields = ["id", "amount", "khach_hang"]
+
+
+class ChiTietHoaDonVNPaySerializer(ModelSerializer):
+    class Meta:
+        model = ChiTietHoaDonVNPay
+        fields = ["id", "hoa_don", "mon_an"]
 
 
 class ThongTinTaiKhoanSerializer(ModelSerializer):
     class Meta:
         model = TaiKhoan
-        fields = ["id", "username", "sdt", "loai_tai_khoan", "ten_nguoi_dung", "avatar", "kinh_do", "vi_do","email"]
+        fields = ["id", "username", "sdt", "loai_tai_khoan", "ten_nguoi_dung", "avatar", "kinh_do", "vi_do", "email"]
 
 
 class ThoiDiemSerializer(ModelSerializer):
@@ -162,7 +175,7 @@ class ThemMonAnSerializer(ModelSerializer):
 class BinhLuanSerializer(serializers.ModelSerializer):
     class Meta:
         model = BinhLuan
-        fields = ["noi_dung"]
+        fields = ["noi_dung", "id", "nguoi_dung_id", "mon_an_binh_luan"]
 
     def create(self, validated_data):
         request = self.context.get('request')

@@ -26,6 +26,10 @@ router.register('thoigianban', views.ThoiGianBanView)
 router.register('monanhientai', views.MonAnHienTaiViewSet)
 router.register('menuhientai', views.MenuHienTaiViewSet, basename="menuhientai")
 router.register(r'searchmonan', SearchMonAnViewSet, basename='searchmonan')
+router.register('chitiethoadonvnpay', views.ChiTietHoaDonVNPayViewSet, basename="chitiethoadonvnpay")
+router.register('payment_vnpay', views.Payment_VNPayViewSet, basename="payment_vnpay")
+
+
 
 urlpatterns = [
     path('', include(router.urls)),

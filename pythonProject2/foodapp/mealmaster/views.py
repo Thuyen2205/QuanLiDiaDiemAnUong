@@ -33,19 +33,22 @@ from datetime import datetime
 from django.conf import settings
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, redirect
+from six import u
+
 # from django.utils.http import urlquote
 
 from .models import PaymentForm
 from .vnpay import vnpay
 
 from .models import TaiKhoan, MonAn, Menu, LoaiTaiKhoan, BinhLuan, LoaiThucAn, ChiTietMenu, HoaDon, ChiTietHoaDon, \
-    Follow, DanhGia, ThongTinGiaoHang, ThoiDiem, ThoiGianBan, Payment_VNPay
+    Follow, DanhGia, ThongTinGiaoHang, ThoiDiem, ThoiGianBan, Payment_VNPay,ChiTietHoaDonVNPay
 from .serializers import (TaiKhoanSerializer, MonAnSerializer,
                           MenuSerializer, LoaiTaiKhoanSerializer, ThemMonAnSerializer,
                           BinhLuanSerializer, TraLoiBinhLuanSerializer, LoaiThucAnSerializer,
                           ChiTietMenuSerializer, HoaDonSerializer, ChiTietHoaDonSerializer,
                           FollowSerializer, DanhGiaSerializer, ThongTinGiaoHangSerializer,
-                          ThongTinTaiKhoanSerializer, ThoiDiemSerializer, ThoiGianBanSerializer)
+                          ThongTinTaiKhoanSerializer, ThoiDiemSerializer, ThoiGianBanSerializer,ChiTietHoaDonVNPaySerializer,
+                          Payment_VNPaySerializer)
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser
 from rest_framework.views import APIView
@@ -68,8 +71,8 @@ def hmacsha512(key, data):
 
 def payment(request):
     if request.method == 'POST':
-        # Process input data and build url payment
         form = PaymentForm(request.POST)
+        userId = request.POST.get('userId')
         if form.is_valid():
             order_type = form.cleaned_data['order_type']
             order_id = form.cleaned_data['order_id']
@@ -77,7 +80,15 @@ def payment(request):
             order_desc = form.cleaned_data['order_desc']
             bank_code = form.cleaned_data['bank_code']
             language = form.cleaned_data['language']
+            userId=form.cleaned_data['userId']
+            request.session['userId'] = userId
+            cartItemIds = form.cleaned_data.get('cartItemIds')
+            request.session['cartItemIds'] = cartItemIds
+            request.session.save()
+
+            # print(cartItemIds)
             ipaddr = get_client_ip(request)
+
             # Build URL Payment
             vnp = vnpay()
             vnp.requestData['vnp_Version'] = '2.1.0'
@@ -100,7 +111,9 @@ def payment(request):
             vnp.requestData['vnp_CreateDate'] = datetime.now().strftime('%Y%m%d%H%M%S')  # 20150410063022
             vnp.requestData['vnp_IpAddr'] = ipaddr
             vnp.requestData['vnp_ReturnUrl'] = settings.VNPAY_RETURN_URL
+
             vnpay_payment_url = vnp.get_payment_url(settings.VNPAY_PAYMENT_URL, settings.VNPAY_HASH_SECRET_KEY)
+
             print(vnpay_payment_url)
             return redirect(vnpay_payment_url)
         else:
@@ -123,6 +136,7 @@ def payment_ipn(request):
         vnp_PayDate = inputData['vnp_PayDate']
         vnp_BankCode = inputData['vnp_BankCode']
         vnp_CardType = inputData['vnp_CardType']
+        vnp_userId=inputData['vnp_userId']
         if vnp.validate_response(settings.VNPAY_HASH_SECRET_KEY):
             # Check & Update Order Status in your Database
             # Your code here
@@ -154,6 +168,11 @@ def payment_ipn(request):
 
 def payment_return(request):
     inputData = request.GET
+    userId = request.session.get('userId')
+    cartItemIds = request.session.get('cartItemIds')
+    # print(cartItemIds)
+    # print(userId)
+
     if inputData:
         vnp = vnpay()
         vnp.responseData = inputData.dict()
@@ -166,23 +185,35 @@ def payment_return(request):
         vnp_PayDate = inputData['vnp_PayDate']
         vnp_BankCode = inputData['vnp_BankCode']
         vnp_CardType = inputData['vnp_CardType']
-        print('Input Data:', inputData)
+
         if vnp.validate_response(settings.VNPAY_HASH_SECRET_KEY):
             if vnp_ResponseCode == "00":
-                # Tạo đối tượng Payment_VNPay khi thanh toán thành công
+                tai_khoan = TaiKhoan.objects.get(id=userId)
+
                 payment = Payment_VNPay.objects.create(
                     order_id=order_id,
                     amount=amount,
                     vnp_TransactionNo=vnp_TransactionNo,
                     order_desc=order_desc,
-                    vnp_ResponseCode=vnp_ResponseCode
+                    vnp_ResponseCode=vnp_ResponseCode,
+                    khach_hang=tai_khoan,
                 )
+                cart_item_ids_list = [int(item) for item in cartItemIds.split(',')]
+                for cart_item_id in cart_item_ids_list:
+                    mon_an = MonAn.objects.get(id=cart_item_id)
+                    chi_tiet_hoa_don = ChiTietHoaDonVNPay.objects.create(
+                        hoa_don=payment,
+                        mon_an=mon_an,
+                    )
                 return render(request, "payment/payment_return.html", {"title": "Kết quả thanh toán",
                                                                        "result": "Thành công", "order_id": order_id,
                                                                        "amount": amount,
                                                                        "order_desc": order_desc,
                                                                        "vnp_TransactionNo": vnp_TransactionNo,
-                                                                       "vnp_ResponseCode": vnp_ResponseCode})
+                                                                       "vnp_ResponseCode": vnp_ResponseCode,
+                                                                       "userId":userId
+
+                                                                       })
             else:
                 return render(request, "payment/payment_return.html", {"title": "Kết quả thanh toán",
                                                                        "result": "Lỗi", "order_id": order_id,
@@ -323,62 +354,14 @@ def refund(request):
                   {"title": "Kết quả hoàn tiền giao dịch", "response_json": response_json})
 
 
-# @csrf_exempt
-# def create_payment(request):
-#     if request.method == 'POST':
-#         try:
-#             # Lấy số tiền cần thanh toán từ yêu cầu của client
-#             data = json.loads(request.body.decode('utf-8'))
-#             total_amount = data.get('total', 0)
-#
-#             # Tạo yêu cầu thanh toán và nhận URL từ VNPAY
-#             vnp_url = create_vnpay_payment(total_amount)
-#
-#             # Trả về URL cho client
-#             return JsonResponse({'vnp_url': vnp_url})
-#         except Exception as e:
-#             return JsonResponse({'error': str(e)}, status=500)
-#
-#     return JsonResponse({'error': 'Invalid request method'}, status=400)
+class ChiTietHoaDonVNPayViewSet(viewsets.ModelViewSet):
+    queryset = ChiTietHoaDonVNPay.objects.all()
+    serializer_class = ChiTietHoaDonVNPaySerializer
 
 
-# def create_vnpay_payment(total_amount):
-#     api_url = "https://sandbox.vnpayment.vn/merchant_webapi/merchant.html"
-#     merchant_id = "R1A37216"
-#     api_key = "HOSKCEPHFSVTQVUGNRLGWCFBFUXPYIZK"
-#     order_info = "Payment for products"
-#     return_url = "https://domainmerchant.vn/ReturnUrl"
-#     vnp_CreateDate = datetime.now().strftime('%Y%m%d%H%M%S')
-#     vnp_TxnRef = str(int(time.time() * 1000))
-#
-#     # Tạo chữ ký (signature) theo quy tắc của VNPAY
-#     secure_hash = hashlib.sha256(
-#         f"{api_key}vnp_Amount={total_amount}vnp_Command=payvnp_CreateDate={vnp_CreateDate}vnp_CurrCode=VNDvnp_IpAddr=127.0.0.1vnp_Locale=vnvnp_OrderInfo={order_info}vnp_OrderType=othervnp_ReturnUrl={return_url}vnp_TmnCode={merchant_id}vnp_Version=2.1.0".encode(
-#             'utf-8')
-#     ).hexdigest()
-#
-#     data = {
-#         "vnp_Version": "2.1.0",
-#         "vnp_Command": "pay",
-#         "vnp_TmnCode": merchant_id,
-#         "vnp_Amount": total_amount * 100,
-#         "vnp_CurrCode": "VND",
-#         "vnp_OrderInfo": order_info,
-#         "vnp_CreateDate": vnp_CreateDate,
-#         "vnp_ReturnUrl": return_url,
-#         "vnp_SecureHash": secure_hash,
-#         "vnp_IpAddr": "127.0.0.1",
-#         "vnp_Locale": "vn",
-#         "vnp_TxnRef": vnp_TxnRef,
-#     }
-#
-#     try:
-#         response = requests.post(api_url, data=data)
-#         response.raise_for_status()  # Nếu có lỗi trong response, raise exception
-#         print(response.url)  # In ra để kiểm tra
-#         return response.url
-#     except requests.exceptions.RequestException as e:
-#         raise Exception(f"Lỗi khi gửi yêu cầu thanh toán: {e}")
+class Payment_VNPayViewSet(viewsets.ModelViewSet):
+    queryset = Payment_VNPay.objects.all()
+    serializer_class =Payment_VNPaySerializer
 
 
 class MonAnHienTaiViewSet(viewsets.ModelViewSet):

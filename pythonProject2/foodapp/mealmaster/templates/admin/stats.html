@@ -2,9 +2,8 @@
 
 {% block content %}
 <h1>Thống kê tài khoản</h1>
-{% for c in stats  %}
-<li><strong>{{c.ten_nguoi_dung}} </strong></li>
-<h1>hihi :{{count}}</h1>
-{% endfor %}
+
+<p>Số lượng tài khoản khách hàng: {{ count_khachhang }}</p>
+<p>Số lượng tài khoản cuahang: {{ count_cuahang }}</p>
 
 {% endblock %}
