@@ -41,13 +41,14 @@ from .models import PaymentForm
 from .vnpay import vnpay
 
 from .models import TaiKhoan, MonAn, Menu, LoaiTaiKhoan, BinhLuan, LoaiThucAn, ChiTietMenu, HoaDon, ChiTietHoaDon, \
-    Follow, DanhGia, ThongTinGiaoHang, ThoiDiem, ThoiGianBan, Payment_VNPay,ChiTietHoaDonVNPay
+    Follow, DanhGia, ThongTinGiaoHang, ThoiDiem, ThoiGianBan, Payment_VNPay, ChiTietHoaDonVNPay
 from .serializers import (TaiKhoanSerializer, MonAnSerializer,
                           MenuSerializer, LoaiTaiKhoanSerializer, ThemMonAnSerializer,
                           BinhLuanSerializer, TraLoiBinhLuanSerializer, LoaiThucAnSerializer,
                           ChiTietMenuSerializer, HoaDonSerializer, ChiTietHoaDonSerializer,
                           FollowSerializer, DanhGiaSerializer, ThongTinGiaoHangSerializer,
-                          ThongTinTaiKhoanSerializer, ThoiDiemSerializer, ThoiGianBanSerializer,ChiTietHoaDonVNPaySerializer,
+                          ThongTinTaiKhoanSerializer, ThoiDiemSerializer, ThoiGianBanSerializer,
+                          ChiTietHoaDonVNPaySerializer,
                           Payment_VNPaySerializer)
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser
@@ -80,7 +81,7 @@ def payment(request):
             order_desc = form.cleaned_data['order_desc']
             bank_code = form.cleaned_data['bank_code']
             language = form.cleaned_data['language']
-            userId=form.cleaned_data['userId']
+            userId = form.cleaned_data['userId']
             request.session['userId'] = userId
             cartItemIds = form.cleaned_data.get('cartItemIds')
             request.session['cartItemIds'] = cartItemIds
@@ -136,7 +137,7 @@ def payment_ipn(request):
         vnp_PayDate = inputData['vnp_PayDate']
         vnp_BankCode = inputData['vnp_BankCode']
         vnp_CardType = inputData['vnp_CardType']
-        vnp_userId=inputData['vnp_userId']
+        vnp_userId = inputData['vnp_userId']
         if vnp.validate_response(settings.VNPAY_HASH_SECRET_KEY):
             # Check & Update Order Status in your Database
             # Your code here
@@ -170,7 +171,7 @@ def payment_return(request):
     inputData = request.GET
     userId = request.session.get('userId')
     cartItemIds = request.session.get('cartItemIds')
-    # print(cartItemIds)
+    print(cartItemIds)
     # print(userId)
 
     if inputData:
@@ -197,13 +198,23 @@ def payment_return(request):
                     order_desc=order_desc,
                     vnp_ResponseCode=vnp_ResponseCode,
                     khach_hang=tai_khoan,
+                    ngay_thanh_toan=timezone.now(),
                 )
                 cart_item_ids_list = [int(item) for item in cartItemIds.split(',')]
-                for cart_item_id in cart_item_ids_list:
-                    mon_an = MonAn.objects.get(id=cart_item_id)
-                    chi_tiet_hoa_don = ChiTietHoaDonVNPay.objects.create(
+                mon_an_list = MonAn.objects.filter(id__in=cart_item_ids_list)
+
+                menu_list = Menu.objects.filter(id__in=cart_item_ids_list)
+
+                for mon_an in mon_an_list:
+                    ChiTietHoaDonVNPay.objects.create(
                         hoa_don=payment,
                         mon_an=mon_an,
+                    )
+
+                for menu in menu_list:
+                    ChiTietHoaDonVNPay.objects.create(
+                        hoa_don=payment,
+                        menu=menu,
                     )
                 return render(request, "payment/payment_return.html", {"title": "Kết quả thanh toán",
                                                                        "result": "Thành công", "order_id": order_id,
@@ -211,7 +222,7 @@ def payment_return(request):
                                                                        "order_desc": order_desc,
                                                                        "vnp_TransactionNo": vnp_TransactionNo,
                                                                        "vnp_ResponseCode": vnp_ResponseCode,
-                                                                       "userId":userId
+                                                                       "userId": userId
 
                                                                        })
             else:
@@ -361,7 +372,7 @@ class ChiTietHoaDonVNPayViewSet(viewsets.ModelViewSet):
 
 class Payment_VNPayViewSet(viewsets.ModelViewSet):
     queryset = Payment_VNPay.objects.all()
-    serializer_class =Payment_VNPaySerializer
+    serializer_class = Payment_VNPaySerializer
 
 
 class MonAnHienTaiViewSet(viewsets.ModelViewSet):

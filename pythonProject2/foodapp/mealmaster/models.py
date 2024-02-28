@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from cloudinary.models import CloudinaryField
 from django import forms
+
+
 # Create your models here.
 
 
@@ -27,7 +29,7 @@ class TaiKhoan(AbstractUser):
     email = models.EmailField(null=True, blank=True)
     dia_chi = models.CharField(max_length=50, null=True, blank=True)
     sdt = models.CharField(max_length=50, null=True, blank=True)
-    avatar = CloudinaryField('avatar',null=True)
+    avatar = CloudinaryField('avatar', null=True)
     kinh_do = models.FloatField(null=True, blank=True, default=0)
     vi_do = models.FloatField(null=True, blank=True, default=0)
     gioi_tinh = models.BooleanField(default=False, null=True, blank=True)
@@ -75,7 +77,6 @@ class BinhLuan(models.Model):
     Img = models.ImageField(upload_to='binhluanimg', null=True, blank=True)
     mon_an_binh_luan = models.ForeignKey('MonAn', on_delete=models.CASCADE, null=True, blank=True)
 
-
     def __str__(self):
         return self.noi_dung
 
@@ -86,7 +87,7 @@ class Menu(models.Model):
     mon_an = models.ManyToManyField('MonAn', through='ChiTietMenu', related_name='menus')
     trang_thai = models.BooleanField(default=True)
     nguoi_dung = models.ForeignKey(TaiKhoan, on_delete=models.CASCADE, null=True, blank=True)
-    hinh_anh= CloudinaryField('avatar',null=True)
+    hinh_anh = CloudinaryField('avatar', null=True)
 
     def __str__(self):
         return self.tieu_de
@@ -100,7 +101,7 @@ class ChiTietMenu(models.Model):
 
 class LoaiThucAn(models.Model):
     ten_loai_thuc_an = models.CharField(max_length=50, null=False, blank=False)
-    hinh_anh = CloudinaryField('hinh_anh',null=True)
+    hinh_anh = CloudinaryField('hinh_anh', null=True)
 
     def __str__(self):
         return self.ten_loai_thuc_an
@@ -150,7 +151,7 @@ class MonAn(models.Model):
     loai_thuc_an = models.ForeignKey(LoaiThucAn, on_delete=models.CASCADE, null=True, blank=True)
     nguoi_dung = models.ForeignKey(TaiKhoan, on_delete=models.CASCADE, null=True, blank=True)
     trang_thai = models.BooleanField(default=True)
-    hinh_anh = CloudinaryField('hinh_anh',null=True)
+    hinh_anh = CloudinaryField('hinh_anh', null=True)
     so_luong = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
@@ -186,32 +187,33 @@ class Voucher(models.Model):
     def __str__(self):
         return self.ten_voucher
 
-class PaymentForm(forms.Form):
 
+class PaymentForm(forms.Form):
     order_id = forms.CharField(max_length=250)
     order_type = forms.CharField(max_length=20)
     amount = forms.IntegerField()
     order_desc = forms.CharField(max_length=100)
     bank_code = forms.CharField(max_length=20, required=False)
     language = forms.CharField(max_length=2)
-    userId=forms.IntegerField()
+    userId = forms.IntegerField()
     cartItemIds = forms.CharField(widget=forms.HiddenInput(), required=False)
+
 
 class Payment_VNPay(models.Model):
     order_id = models.BigIntegerField(default=0, null=True, blank=True)
-    amount=models.FloatField(default=0.0,null=True,blank=True)
-    order_desc=models.CharField(max_length=200,null=True,blank=True)
-    vnp_TransactionNo=models.CharField(max_length=200,null=True,blank=True)
-    vnp_ResponseCode=models.CharField(max_length=200,null=True, blank=True)
-    khach_hang=models.ForeignKey(TaiKhoan, on_delete=models.CASCADE, null=True, blank=True)
+    amount = models.FloatField(default=0.0, null=True, blank=True)
+    order_desc = models.CharField(max_length=200, null=True, blank=True)
+    vnp_TransactionNo = models.CharField(max_length=200, null=True, blank=True)
+    vnp_ResponseCode = models.CharField(max_length=200, null=True, blank=True)
+    khach_hang = models.ForeignKey(TaiKhoan, on_delete=models.CASCADE, null=True, blank=True)
     # mon_an=models.ForeignKey(MonAn,on_delete=models.CASCADE,null=True,blank=True)
     mon_an = models.ManyToManyField('MonAn', through='ChiTietHoaDonVNPay', related_name='hoadon_vnpay')
+    menu = models.ManyToManyField('Menu', through='ChiTietHoaDonVNPay', related_name='hoadon_vnpay_menu')
     cartItemIds = models.CharField(max_length=200, null=True, blank=True)
+    ngay_thanh_toan = models.DateTimeField(null=True, blank=True)
 
 
 class ChiTietHoaDonVNPay(models.Model):
     hoa_don = models.ForeignKey(Payment_VNPay, on_delete=models.CASCADE, null=False, blank=False)
-    mon_an = models.ForeignKey('MonAn', on_delete=models.CASCADE, null=False, blank=False)
-
-
-
+    mon_an = models.ForeignKey('MonAn', on_delete=models.CASCADE, null=True, blank=True)
+    menu = models.ForeignKey('Menu', on_delete=models.CASCADE, null=True, blank=True)
