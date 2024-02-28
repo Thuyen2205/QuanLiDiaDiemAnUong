@@ -29,6 +29,7 @@ class QuarterYearForm(forms.Form):
     quarter = forms.IntegerField(label='Quý', min_value=1, max_value=4)
 
 
+
 class TaiKhoanAdminSite(admin.AdminSite):
     site_header = 'Thong Kê Tài Khoản'
 
@@ -61,7 +62,7 @@ class KhachHangAdminSite(admin.AdminSite):
 
 
 class CuaHangAdminSite(admin.AdminSite):
-    site_header = 'Thong Kê Khach Hang'
+    site_header = 'Thong Kê Cưa Hang'
 
     def get_urls(self):
         return [

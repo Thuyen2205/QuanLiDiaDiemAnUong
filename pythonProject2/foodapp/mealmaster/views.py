@@ -382,17 +382,18 @@ class MonAnHienTaiViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         # Lấy thời điểm hiện tại
         current_time = timezone.localtime(timezone.now())
-        current_hour = current_time.hour
 
-        print("Giờ hiện tại là:", current_hour)
         current_thoi_gian_bans = ThoiGianBan.objects.filter(thoi_diem__thoi_gian_bat_dau__lte=current_time,
                                                             thoi_diem__thoi_gian_ket_thuc__gte=current_time)
 
-        mon_an_ids = current_thoi_gian_bans.values_list('mon_an', flat=True)
-        queryset = MonAn.objects.filter(id__in=mon_an_ids)
 
+
+        mon_an_ids = current_thoi_gian_bans.values_list('mon_an', flat=True)
+
+        queryset = MonAn.objects.filter(id__in=mon_an_ids)
         serializer = MonAnSerializer(queryset, many=True)
         serialized_data = serializer.data
+        # print(serialized_data)
 
         return Response(serialized_data)
 
@@ -532,10 +533,8 @@ class SearchMonAnViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         ten_mon_an = self.kwargs.get('ten_mon_an', None)
 
-        # Lấy thời điểm hiện tại
         current_time = timezone.localtime(timezone.now())
 
-        # Lấy danh sách các món ăn có thời gian bán hiện tại
         current_thoi_gian_bans = ThoiGianBan.objects.filter(
             thoi_diem__thoi_gian_bat_dau__lte=current_time,
             thoi_diem__thoi_gian_ket_thuc__gte=current_time
@@ -543,7 +542,6 @@ class SearchMonAnViewSet(viewsets.ModelViewSet):
 
         mon_an_ids = current_thoi_gian_bans.values_list('mon_an', flat=True)
 
-        # Lọc danh sách món ăn theo tên và thời gian bán hiện tại
         queryset = MonAn.objects.filter(
             Q(ten_mon_an__icontains=ten_mon_an) if ten_mon_an else Q(),
             id__in=mon_an_ids
@@ -615,11 +613,12 @@ class TaiKhoanViewSet(viewsets.ViewSet,
     @action(methods=['get'], detail=True, url_path='monanAll', url_name='monans')
     def list_MonAnALl_of_TaiKhoan(self, request, *args, **kwargs):
         tai_khoan_id = kwargs.get('pk')
-
+        limit = int(request.GET.get('limit', 10))
+        offset = int(request.GET.get('offset', 0))
         try:
             tai_khoan = TaiKhoan.objects.get(pk=tai_khoan_id)
 
-            mon_an_queryset = MonAn.objects.filter(nguoi_dung=tai_khoan)
+            mon_an_queryset = MonAn.objects.filter(nguoi_dung=tai_khoan).order_by('id')[offset:offset+limit]
 
             serializer = MonAnSerializer(mon_an_queryset, many=True)
             return Response(serializer.data)

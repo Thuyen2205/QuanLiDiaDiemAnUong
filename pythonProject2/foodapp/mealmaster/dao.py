@@ -38,13 +38,13 @@ def users_with_total_amount():
     return users_with_amount
 
 
-def get_year_from_order_desc(order_desc):
-    colon_index = order_desc.find(':')
-
-    time_part = order_desc[colon_index + 2:]
-
-    datetime_object = datetime.strptime(time_part, '%Y-%m-%d %H:%M:%S')
-    return datetime_object.year
+# def get_year_from_order_desc(order_desc):
+#     colon_index = order_desc.find(':')
+#
+#     time_part = order_desc[colon_index + 2:]
+#
+#     datetime_object = datetime.strptime(time_part, '%Y-%m-%d %H:%M:%S')
+#     return datetime_object.year
 
 
 def total_amount_by_year(year):

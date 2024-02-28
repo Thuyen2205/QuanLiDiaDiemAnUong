@@ -135,6 +135,9 @@ class HoaDon(models.Model):
         return self.ngay_tao
 
 
+
+
+
 class ChiTietHoaDon(models.Model):
     hoa_don = models.ForeignKey(HoaDon, on_delete=models.CASCADE, null=False, blank=False)
     mon_an = models.ForeignKey('MonAn', on_delete=models.CASCADE, null=False, blank=False)
