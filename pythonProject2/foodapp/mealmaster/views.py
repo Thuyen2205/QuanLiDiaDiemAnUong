@@ -200,10 +200,10 @@ def payment_return(request):
                     khach_hang=tai_khoan,
                     ngay_thanh_toan=timezone.now(),
                 )
-                cart_item_ids_list = [int(item) for item in cartItemIds.split(',')]
-                mon_an_list = MonAn.objects.filter(id__in=cart_item_ids_list)
+                cart_item_ids_list = [int(item) for item in cartItemIds.split(',')]#2,4,5
+                mon_an_list = MonAn.objects.filter(id__in=cart_item_ids_list)#2,4
 
-                menu_list = Menu.objects.filter(id__in=cart_item_ids_list)
+                menu_list = Menu.objects.filter(id__in=cart_item_ids_list)#2,5
 
                 for mon_an in mon_an_list:
                     ChiTietHoaDonVNPay.objects.create(
